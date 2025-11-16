@@ -83,6 +83,55 @@
       font-size:0.95rem;
     }
     .admin-response h4 { margin:0 0 6px; font-size:0.95rem; }
+
+    /* Mobile navigation styles */
+    @media (max-width: 768px) {
+        .nav-links {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            flex-direction: column;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-links.open {
+            display: flex;
+        }
+        
+        .nav-toggle.open {
+            background: rgba(255, 255, 255, 0.1);
+        }
+    }
+
+    /* Ensure the toggle button is visible on mobile */
+    .nav-toggle {
+        display: none;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+    }
+
+    @media (max-width: 768px) {
+        .nav-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+
+    /* Smooth transitions */
+    .nav-links {
+        transition: all 0.3s ease-in-out;
+    }
     </style>
 </head>
 <body>
@@ -106,25 +155,29 @@
                         <a href="#top" class="system-name" aria-label="Go to top">Student Suggestion System</a>
                     </div>
                 </div>
+
+                <button
+                    type="button"
+                    id="navToggle"
+                    class="nav-toggle"
+                    aria-controls="primary-navigation"
+                    aria-expanded="false"
+                    title="Toggle menu"
+                    aria-label="Toggle navigation menu"
+                    data-target="primary-navigation"
+                >
+                    <span class="sr-only">Toggle navigation</span>
+                    <i class="fas fa-bars" aria-hidden="true"></i>
+                </button>
+
+                <ul id="primary-navigation" class="nav-links" role="menubar">
+                    <li role="none"><a role="menuitem" href="#submit" class="nav-link">Submit Suggestion</a></li>
+                    <li role="none"><a role="menuitem" href="#recent" class="nav-link">Recent</a></li>
+                    <li role="none"><a role="menuitem" href="#help" class="nav-link">Help</a></li>
+                    <li role="none"><a role="menuitem" href="#contact" class="nav-link">Contact</a></li>
+                    <li role="none"><a role="menuitem" href="admin-login.html" class="nav-link admin-btn" aria-label="Admin login">Admin</a></li>
+                </ul>
             </div>
-
-            <button
-                class="nav-toggle"
-                aria-controls="primary-navigation"
-                aria-expanded="false"
-                title="Toggle menu"
-            >
-                <span class="sr-only">Toggle navigation</span>
-                <i class="fas fa-bars" aria-hidden="true"></i>
-            </button>
-
-            <ul id="primary-navigation" class="nav-links" role="menubar">
-                <li role="none"><a role="menuitem" href="#submit" class="nav-link">Submit Suggestion</a></li>
-                <li role="none"><a role="menuitem" href="#recent" class="nav-link">Recent</a></li>
-                <li role="none"><a role="menuitem" href="#help" class="nav-link">Help</a></li>
-                <li role="none"><a role="menuitem" href="#contact" class="nav-link">Contact</a></li>
-                <li role="none"><a role="menuitem" href="admin-login.html" class="nav-link admin-btn" aria-label="Admin login">Admin</a></li>
-            </ul>
         </div>
     </nav>
 
@@ -330,7 +383,57 @@
         </div>
     </footer>
 
-    <script src="nav-toggle.js"></script>
     <script src="script.js"></script>
+    <script>
+    // Fixed toggle button functionality
+    (function(){
+        const navToggle = document.getElementById('navToggle');
+        const primaryNav = document.getElementById('primary-navigation');
+        
+        if (navToggle && primaryNav) {
+            navToggle.addEventListener('click', function() {
+                const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                
+                // Toggle aria-expanded attribute
+                this.setAttribute('aria-expanded', String(!isExpanded));
+                
+                // Toggle navigation visibility
+                primaryNav.classList.toggle('open');
+                this.classList.toggle('open');
+                
+                // Change icon from bars to X when open
+                const icon = this.querySelector('i');
+                if (icon) {
+                    if (!isExpanded) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                }
+            });
+
+            // Close menu when clicking on nav links (mobile)
+            const navLinks = primaryNav.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        navToggle.setAttribute('aria-expanded', 'false');
+                        primaryNav.classList.remove('open');
+                        navToggle.classList.remove('open');
+                        
+                        // Reset icon to bars
+                        const icon = navToggle.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('fa-times');
+                            icon.classList.add('fa-bars');
+                        }
+                    }
+                });
+            });
+        }
+    })();
+    </script>
 </body>
 </html>
