@@ -20,8 +20,8 @@
                 </div>
             </div>
             <div class="nav-links">
-                <a href="index.html" class="nav-link">View Site</a>
-                <a href="#" class="nav-link admin-btn" onclick="logout()">Logout</a>
+                <a href="index.html" class="nav-link" target="_blank" rel="noopener">View Site</a>
+                <button type="button" class="nav-link admin-btn" onclick="logout()">Logout</button>
             </div>
         </div>
     </nav>
@@ -70,7 +70,7 @@
             <div class="content-header">
                 <h1>All Suggestions</h1>
                 <div class="header-actions">
-                    <button class="refresh-btn" onclick="loadSuggestions()">
+                    <button type="button" class="refresh-btn" onclick="loadSuggestions()">
                         <i class="fas fa-sync-alt"></i>
                         Refresh
                     </button>
@@ -78,7 +78,10 @@
             </div>
 
             <div class="suggestions-grid" id="suggestionsGrid">
-                <!-- Suggestions will be loaded dynamically -->
+                <div class="loading-message">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Loading suggestions...
+                </div>
             </div>
         </main>
     </div>
@@ -88,7 +91,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Respond to Suggestion</h3>
-                <button class="modal-close" onclick="closeResponseModal()">
+                <button type="button" class="modal-close" onclick="closeResponseModal()" aria-label="Close response dialog">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -112,8 +115,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeResponseModal()">Cancel</button>
-                <button class="btn-primary" onclick="submitResponse()">Submit Response</button>
+                <button type="button" class="btn-secondary" onclick="closeResponseModal()">Cancel</button>
+                <button type="button" class="btn-primary" onclick="submitResponse()">Submit Response</button>
             </div>
         </div>
     </div>
@@ -123,7 +126,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Delete Suggestion</h3>
-                <button class="modal-close" onclick="closeDeleteModal()">
+                <button type="button" class="modal-close" onclick="closeDeleteModal()" aria-label="Close delete dialog">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -135,12 +138,12 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
-                <button class="btn-danger" onclick="confirmDelete()">Delete Suggestion</button>
+                <button type="button" class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button type="button" class="btn-danger" onclick="confirmDelete()">Delete Suggestion</button>
             </div>
         </div>
     </div>
 
-    <script src="admin-dashboard.js"></script>
+    <script src="admin-dashboard.js" defer></script>
 </body>
 </html>

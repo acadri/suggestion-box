@@ -21,9 +21,32 @@ function checkAdminAuth() {
 // Read suggestions from localStorage
 function readSuggestions() {
     try {
-        return JSON.parse(localStorage.getItem(SUGGESTIONS_KEY) || '[]');
+        const raw = localStorage.getItem(SUGGESTIONS_KEY);
+        if (raw) {
+            return JSON.parse(raw);
+        }
+
+        // Fallback: scan for legacy keys containing "suggestion" and migrate first valid array
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!key) continue;
+            if (/suggestion/i.test(key) && key !== SUGGESTIONS_KEY) {
+                try {
+                    const candidate = JSON.parse(localStorage.getItem(key) || '[]');
+                    if (Array.isArray(candidate)) {
+                        console.warn(`Migrating suggestions from "${key}" to "${SUGGESTIONS_KEY}"`);
+                        saveSuggestions(candidate);
+                        return candidate;
+                    }
+                } catch (err) {
+                    // ignore parse errors
+                }
+            }
+        }
+
+        return [];
     } catch (e) {
-        console.error('Failed to parse suggestions', e);
+        console.error('Failed to read suggestions', e);
         return [];
     }
 }
@@ -51,24 +74,33 @@ function escapeHtml(str = '') {
 
 // Load and display suggestions
 function loadSuggestions() {
-    const suggestions = readSuggestions();
+    const suggestions = readSuggestions() || [];
     const grid = document.getElementById('suggestionsGrid');
-    
-    if (suggestions.length === 0) {
+    if (!grid) return;
+
+    console.log('Loading suggestions:', suggestions);
+
+    if (!suggestions || suggestions.length === 0) {
         grid.innerHTML = `
             <div class="no-suggestions">
                 <i class="fas fa-lightbulb"></i>
-                <h3>No Suggestions Yet</h3>
-                <p>There are no suggestions to display.</p>
+                <h3>No Suggestions</h3>
+                <p>There are no suggestions yet.</p>
+                <div style="margin-top:10px;">
+                    <button type="button" class="btn-primary" onclick="addSampleSuggestions()">Add Test Data</button>
+                </div>
             </div>
         `;
         return;
     }
 
-    grid.innerHTML = suggestions.map(suggestion => {
-        const statusClass = `status-${(suggestion.status || 'pending').toLowerCase().replace(/\s+/g, '-')}`;
+    // Sort newest first
+    const sorted = suggestions.slice().sort((a, b) => (b.created || 0) - (a.created || 0));
+
+    grid.innerHTML = sorted.map(suggestion => {
+        const statusClass = (suggestion.status || 'Pending').toString().toLowerCase().replace(/\s+/g, '-'); // produces "in-review", "implemented", etc.
         const hasResponse = suggestion.adminResponse && suggestion.adminResponse.trim() !== '';
-        
+
         return `
             <div class="suggestion-card-admin" data-id="${suggestion.id}">
                 <div class="suggestion-header-admin">
@@ -76,38 +108,23 @@ function loadSuggestions() {
                         <span class="department-badge">${escapeHtml(suggestion.department || 'General')}</span>
                         <span class="suggestion-date">${formatDate(suggestion.created)}</span>
                     </div>
-                    <div class="status-badge ${statusClass}">${suggestion.status || 'Pending'}</div>
+                    <div class="status-badge ${statusClass}">${escapeHtml(suggestion.status || 'Pending')}</div>
                 </div>
-                
+
                 <div class="suggestion-content">
                     <p class="suggestion-text">${escapeHtml(suggestion.text)}</p>
                 </div>
 
-                ${hasResponse ? `
-                    <div class="admin-response-display">
-                        <h4>Admin Response:</h4>
-                        <p>${escapeHtml(suggestion.adminResponse)}</p>
-                    </div>
-                ` : ''}
-
-                <div class="suggestion-actions-admin">
-                    <button class="action-btn-admin respond-btn" onclick="openResponseModal('${suggestion.id}')">
-                        <i class="fas fa-reply"></i>
-                        ${hasResponse ? 'Edit Response' : 'Respond'}
+                <div class="suggestion-actions">
+                    <button type="button" class="btn-sm" onclick="openResponseModal(${suggestion.id})">
+                        <i class="fas fa-reply"></i> Respond
                     </button>
-                    <button class="action-btn-admin implement-btn" onclick="updateStatus('${suggestion.id}', 'Implemented')">
-                        <i class="fas fa-check"></i>
-                        Implement
-                    </button>
-                    <button class="action-btn-admin reject-btn" onclick="updateStatus('${suggestion.id}', 'Rejected')">
-                        <i class="fas fa-times"></i>
-                        Reject
-                    </button>
-                    <button class="action-btn-admin delete-btn" onclick="openDeleteModal('${suggestion.id}')">
-                        <i class="fas fa-trash"></i>
-                        Delete
+                    <button type="button" class="btn-sm btn-danger" onclick="openDeleteModal(${suggestion.id})">
+                        <i class="fas fa-trash-alt"></i> Delete
                     </button>
                 </div>
+
+                ${hasResponse ? `<div class="admin-response-snippet"><strong>Admin:</strong> ${escapeHtml(suggestion.adminResponse)}</div>` : ''}
             </div>
         `;
     }).join('');
@@ -118,7 +135,10 @@ function openResponseModal(suggestionId) {
     const suggestions = readSuggestions();
     const suggestion = suggestions.find(s => s.id == suggestionId);
     
-    if (!suggestion) return;
+    if (!suggestion) {
+        showNotification('Suggestion not found!', 'error');
+        return;
+    }
     
     currentSuggestionId = suggestionId;
     
@@ -164,6 +184,8 @@ function submitResponse() {
         
         // Show success message
         showNotification('Response submitted successfully!', 'success');
+    } else {
+        showNotification('Suggestion not found!', 'error');
     }
 }
 
@@ -178,6 +200,8 @@ function updateStatus(suggestionId, newStatus) {
         loadSuggestions();
         
         showNotification(`Suggestion marked as ${newStatus}`, 'success');
+    } else {
+        showNotification('Suggestion not found!', 'error');
     }
 }
 
@@ -186,7 +210,10 @@ function openDeleteModal(suggestionId) {
     const suggestions = readSuggestions();
     const suggestion = suggestions.find(s => s.id == suggestionId);
     
-    if (!suggestion) return;
+    if (!suggestion) {
+        showNotification('Suggestion not found!', 'error');
+        return;
+    }
     
     currentSuggestionId = suggestionId;
     
@@ -222,6 +249,8 @@ function confirmDelete() {
         
         // Show success message
         showNotification('Suggestion deleted successfully!', 'success');
+    } else {
+        showNotification('Suggestion not found!', 'error');
     }
 }
 
@@ -237,7 +266,7 @@ function showNotification(message, type = 'info') {
     notification.className = `admin-notification notification-${type}`;
     notification.innerHTML = `
         <div class="notification-content">
-            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i>
+            <i class="fas ${getNotificationIcon(type)}"></i>
             <span>${message}</span>
         </div>
         <button class="notification-close" onclick="this.parentElement.remove()">
@@ -268,6 +297,12 @@ function showNotification(message, type = 'info') {
             }
             .notification-success {
                 border-left-color: #28a745;
+            }
+            .notification-error {
+                border-left-color: #dc3545;
+            }
+            .notification-info {
+                border-left-color: #17a2b8;
             }
             .notification-content {
                 display: flex;
@@ -309,6 +344,16 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
+// Get appropriate icon for notification type
+function getNotificationIcon(type) {
+    switch (type) {
+        case 'success': return 'fa-check-circle';
+        case 'error': return 'fa-exclamation-circle';
+        case 'info':
+        default: return 'fa-info-circle';
+    }
+}
+
 // Logout function
 function logout() {
     localStorage.removeItem('adminLoggedIn');
@@ -329,16 +374,61 @@ window.onclick = function(event) {
     }
 }
 
+// Test function to add sample data (for debugging)
+function addSampleSuggestions() {
+    const sampleSuggestions = [
+        {
+            id: Date.now() - 1000,
+            department: "Faculty of Technoscience",
+            tag: "Infrastructure",
+            text: "The labs are too small for the number of students we have. We need larger lab spaces or additional lab sessions.",
+            status: "Implemented",
+            adminResponse: "Thank you for your suggestion. We have allocated additional lab space and extended lab hours starting next semester.",
+            created: Date.now() - 86400000 // 1 day ago
+        },
+        {
+            id: Date.now() - 2000,
+            department: "Faculty of Science",
+            tag: "Academic",
+            text: "We need more research materials in the library for advanced physics courses.",
+            status: "In Review",
+            adminResponse: "",
+            created: Date.now() - 172800000 // 2 days ago
+        },
+        {
+            id: Date.now() - 3000,
+            department: "Library",
+            tag: "Student Welfare",
+            text: "Extend library hours during exam periods to accommodate students who prefer late-night studying.",
+            status: "Pending",
+            adminResponse: "",
+            created: Date.now() - 259200000 // 3 days ago
+        }
+    ];
+
+    saveSuggestions(sampleSuggestions);
+    loadSuggestions();
+    showNotification('Sample suggestions added for testing!', 'info');
+}
+
 // Initialize admin dashboard
 document.addEventListener('DOMContentLoaded', () => {
     // Check authentication
     if (!checkAdminAuth()) return;
-    
+
     // Load suggestions
     loadSuggestions();
-    
+
+    // Add debug button if no suggestions exist (for testing)
+    const suggestions = readSuggestions();
+    if (suggestions.length === 0 && typeof addSampleSuggestions === 'function') {
+        // leave UI button in place via loadSuggestions; no extra action required
+    }
+
     // Auto-logout after 24 hours
     setInterval(() => {
-        checkAdminAuth();
+        if (!checkAdminAuth()) {
+            // if auth expired, redirect handled by checkAdminAuth
+        }
     }, 60 * 60 * 1000); // Check every hour
 });

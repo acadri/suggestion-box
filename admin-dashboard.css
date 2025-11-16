@@ -123,6 +123,35 @@
     background: #660000;
 }
 
+/* Loading and Empty States */
+.loading-message,
+.no-suggestions {
+    text-align: center;
+    padding: 3rem;
+    color: #6c757d;
+    font-style: italic;
+    background: white;
+    border-radius: 12px;
+    border: 2px dashed #e9ecef;
+}
+
+.loading-message i,
+.no-suggestions i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #dee2e6;
+}
+
+.no-suggestions h3 {
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.no-suggestions p {
+    color: #6c757d;
+    margin: 0;
+}
+
 /* Suggestions Grid */
 .suggestions-grid {
     display: flex;
@@ -270,7 +299,7 @@
     gap: 0.5rem;
 }
 
-.action-btn-admin:not(.active):hover {
+.action-btn-admin:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
@@ -465,6 +494,12 @@
     margin-bottom: 0.5rem;
 }
 
+.suggestion-preview p {
+    color: #495057;
+    line-height: 1.5;
+    margin: 0;
+}
+
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -569,5 +604,13 @@
     .status-badge {
         font-size: 0.75rem;
         padding: 0.4rem 0.8rem;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem;
     }
 }
