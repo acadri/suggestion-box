@@ -2,6 +2,51 @@
 const SUGGESTIONS_KEY = 'muni_suggestions_v1';
 let currentSuggestionId = null;
 
+// Sidebar toggle functionality
+function initSidebarToggle() {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+
+    if (sidebarToggle && sidebar) {
+        sidebarToggle.addEventListener('click', function() {
+            const isExpanded = this.getAttribute('aria-expanded') === 'true';
+            
+            // Toggle sidebar
+            sidebar.classList.toggle('open');
+            this.setAttribute('aria-expanded', String(!isExpanded));
+            
+            // Change icon
+            const icon = this.querySelector('i');
+            if (icon) {
+                if (!isExpanded) {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                } else {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            }
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            if (window.innerWidth <= 1024 && 
+                sidebar.classList.contains('open') &&
+                !sidebar.contains(event.target) &&
+                !sidebarToggle.contains(event.target)) {
+                sidebar.classList.remove('open');
+                sidebarToggle.setAttribute('aria-expanded', 'false');
+                const icon = sidebarToggle.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            }
+        });
+    }
+}
+
 // Check admin authentication
 function checkAdminAuth() {
     const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
@@ -98,7 +143,7 @@ function loadSuggestions() {
     const sorted = suggestions.slice().sort((a, b) => (b.created || 0) - (a.created || 0));
 
     grid.innerHTML = sorted.map(suggestion => {
-        const statusClass = (suggestion.status || 'Pending').toString().toLowerCase().replace(/\s+/g, '-'); // produces "in-review", "implemented", etc.
+        const statusClass = (suggestion.status || 'Pending').toString().toLowerCase().replace(/\s+/g, '-');
         const hasResponse = suggestion.adminResponse && suggestion.adminResponse.trim() !== '';
 
         return `
@@ -115,16 +160,27 @@ function loadSuggestions() {
                     <p class="suggestion-text">${escapeHtml(suggestion.text)}</p>
                 </div>
 
-                <div class="suggestion-actions">
-                    <button type="button" class="btn-sm" onclick="openResponseModal(${suggestion.id})">
+                ${hasResponse ? `
+                <div class="admin-response-display">
+                    <h4>Admin Response:</h4>
+                    <p>${escapeHtml(suggestion.adminResponse)}</p>
+                </div>
+                ` : ''}
+
+                <div class="suggestion-actions-admin">
+                    <button type="button" class="action-btn-admin respond-btn" onclick="openResponseModal(${suggestion.id})">
                         <i class="fas fa-reply"></i> Respond
                     </button>
-                    <button type="button" class="btn-sm btn-danger" onclick="openDeleteModal(${suggestion.id})">
-                        <i class="fas fa-trash-alt"></i> Delete
+                    <button type="button" class="action-btn-admin implement-btn" onclick="updateStatus(${suggestion.id}, 'Implemented')">
+                        <i class="fas fa-check"></i> Implement
+                    </button>
+                    <button type="button" class="action-btn-admin reject-btn" onclick="updateStatus(${suggestion.id}, 'Rejected')">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                    <button type="button" class="action-btn-admin delete-btn" onclick="openDeleteModal(${suggestion.id})">
+                        <i class="fas fa-trash"></i> Delete
                     </button>
                 </div>
-
-                ${hasResponse ? `<div class="admin-response-snippet"><strong>Admin:</strong> ${escapeHtml(suggestion.adminResponse)}</div>` : ''}
             </div>
         `;
     }).join('');
@@ -150,11 +206,13 @@ function openResponseModal(suggestionId) {
     
     // Show modal
     document.getElementById('responseModal').style.display = 'block';
+    document.getElementById('responseModal').setAttribute('aria-hidden', 'false');
 }
 
 // Close response modal
 function closeResponseModal() {
     document.getElementById('responseModal').style.display = 'none';
+    document.getElementById('responseModal').setAttribute('aria-hidden', 'true');
     currentSuggestionId = null;
 }
 
@@ -223,11 +281,13 @@ function openDeleteModal(suggestionId) {
     
     // Show modal
     document.getElementById('deleteModal').style.display = 'block';
+    document.getElementById('deleteModal').setAttribute('aria-hidden', 'false');
 }
 
 // Close delete modal
 function closeDeleteModal() {
     document.getElementById('deleteModal').style.display = 'none';
+    document.getElementById('deleteModal').setAttribute('aria-hidden', 'true');
     currentSuggestionId = null;
 }
 
@@ -264,12 +324,14 @@ function showNotification(message, type = 'info') {
 
     const notification = document.createElement('div');
     notification.className = `admin-notification notification-${type}`;
+    notification.setAttribute('role', 'alert');
+    notification.setAttribute('aria-live', 'polite');
     notification.innerHTML = `
         <div class="notification-content">
             <i class="fas ${getNotificationIcon(type)}"></i>
             <span>${message}</span>
         </div>
-        <button class="notification-close" onclick="this.parentElement.remove()">
+        <button class="notification-close" onclick="this.parentElement.remove()" aria-label="Close notification">
             <i class="fas fa-times"></i>
         </button>
     `;
@@ -374,6 +436,14 @@ window.onclick = function(event) {
     }
 }
 
+// Close modals with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeResponseModal();
+        closeDeleteModal();
+    }
+});
+
 // Test function to add sample data (for debugging)
 function addSampleSuggestions() {
     const sampleSuggestions = [
@@ -415,6 +485,9 @@ function addSampleSuggestions() {
 document.addEventListener('DOMContentLoaded', () => {
     // Check authentication
     if (!checkAdminAuth()) return;
+
+    // Initialize sidebar toggle
+    initSidebarToggle();
 
     // Load suggestions
     loadSuggestions();
