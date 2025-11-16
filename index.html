@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muni University - Student Suggestion System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+    /* Center-align footer: logo first */
+    .footer .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 18px;
+      padding: 40px 20px;
+    }
+    .footer-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .footer-logo-img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+    .footer-logo-text strong { display: block; font-size: 1.1rem; }
+    .footer-description { max-width: 800px; margin: 0 auto; }
+    .footer-bottom { width: 100%; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 18px; }
+    @media (min-width: 900px) {
+      .footer .container { padding: 60px 40px; }
+    }
+
+    /* Recent suggestions: status badge and admin response */
+    .suggestion-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.04);
+      padding: 14px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      text-align: left;
+    }
+    .suggestion-meta {
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-bottom:8px;
+      flex-wrap:wrap;
+    }
+    .suggestion-tag {
+      background: rgba(0,0,0,0.15);
+      color: #fff;
+      padding:4px 8px;
+      border-radius:6px;
+      font-size:0.9rem;
+    }
+    .suggestion-dept { color: rgba(198, 113, 113, 0.75); font-size:0.9rem; }
+    .suggestion-status {
+      margin-left:auto;
+      padding:4px 8px;
+      border-radius:999px;
+      font-weight:600;
+      font-size:0.8rem;
+    }
+    .status-pending { background:#f6c244; color:#2b1f00; }
+    .status-in-review { background:#6ea8fe; color:#04244b; }
+    .status-implemented { background:#4cd964; color:#042b00; }
+    .status-rejected { background:#ff6b6b; color:#3d0000; }
+
+    /* changed: make recent suggestion text black */
+    .suggestion-text { margin:6px 0 10px; white-space:pre-wrap; color: #000; }
+
+    .admin-response {
+      border-left: 3px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      padding:10px;
+      border-radius:6px;
+      color: #dfe7ea;
+      font-size:0.95rem;
+    }
+    .admin-response h4 { margin:0 0 6px; font-size:0.95rem; }
+    </style>
+</head>
+<body>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <div class="logo-main">
+                    <picture>
+                        <img
+                            src="logo.webp"
+                            alt="Muni University Logo"
+                            class="logo-img"
+                            loading="lazy"
+                            width="50"
+                            height="50"
+                            style="cursor:pointer;transition:transform .18s ease;display:block;transform-origin:center;"
+                            onclick="(function(img){ if(img.dataset.expanded==='1'){ img.style.transform='scale(1)'; img.dataset.expanded='0'; } else { img.style.transform='scale(5)'; img.dataset.expanded='1'; } })(this)"
+                        />
+                    </picture>
+                    <div class="logo-text">
+                        <a href="#top" class="system-name" aria-label="Go to top">Student Suggestion System</a>
+                    </div>
+                </div>
+            </div>
+
+            <button
+                class="nav-toggle"
+                aria-controls="primary-navigation"
+                aria-expanded="false"
+                title="Toggle menu"
+            >
+                <span class="sr-only">Toggle navigation</span>
+                <i class="fas fa-bars" aria-hidden="true"></i>
+            </button>
+
+            <ul id="primary-navigation" class="nav-links" role="menubar">
+                <li role="none"><a role="menuitem" href="#submit" class="nav-link">Submit Suggestion</a></li>
+                <li role="none"><a role="menuitem" href="#recent" class="nav-link">Recent</a></li>
+                <li role="none"><a role="menuitem" href="#help" class="nav-link">Help</a></li>
+                <li role="none"><a role="menuitem" href="#contact" class="nav-link">Contact</a></li>
+                <li role="none"><a role="menuitem" href="admin-login.html" class="nav-link admin-btn" aria-label="Admin login">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Your Voice Shapes Our Future</h1>
+            <p class="hero-description">Help transform Muni University with your innovative suggestions and feedback. Together, we build a better campus experience.</p>
+            <div class="hero-actions">
+                <a href="#submit" class="cta-button">Submit Suggestion</a>
+                <a href="#recent" class="cta-button secondary">View Recent</a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <div class="stat-number" id="totalSuggestionsCount">0</div>
+                    <div class="stat-label">Total Suggestions</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="resolvedCount">0</div>
+                    <div class="stat-label">Implemented</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="departmentsCount">9</div>
+                    <div class="stat-label">Departments</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="submit" class="submission-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Submit Your Suggestion</h2>
+                <p>Your ideas help us improve. Be specific, constructive, and clear in your suggestions.</p>
+            </div>
+            
+            <form id="suggestionForm" class="suggestion-form">
+                <div class="form-group">
+                    <label for="department">
+                        <i class="fas fa-building"></i>
+                        Department/Faculty
+                    </label>
+                    <select id="department" name="department" required>
+                        <option value="">Select Department</option>
+                        <option value="Faculty of Technoscience">Faculty of Technoscience</option>
+                        <option value="Faculty of Science">Faculty of Science</option>
+                        <option value="Faculty of Education">Faculty of Education</option>
+                        <option value="Faculty of Management Science">Faculty of Management Science</option>
+                        <option value="Faculty of Agriculture">Faculty of Agriculture and Environmental Science</option>
+                        <option value="Faculty of Health Science">Faculty of Health Science</option>
+                        <option value="Administration">Administration</option>
+                        <option value="Library">Library</option>
+                        <option value="ICT">ICT Department</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="tag">
+                        <i class="fas fa-tag"></i>
+                        Category
+                    </label>
+                    <select id="tag" name="tag" required>
+                        <option value="">Select Category</option>
+                        <option value="Academic">Academic</option>
+                        <option value="Infrastructure">Infrastructure</option>
+                        <option value="Administrative">Administrative</option>
+                        <option value="Student Welfare">Student Welfare</option>
+                        <option value="Technology">Technology</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="suggestion">
+                        <i class="fas fa-comment-dots"></i>
+                        Your Suggestion
+                    </label>
+                    <textarea id="suggestion" name="suggestion" required placeholder="Describe the issue clearly and propose practical solutions."></textarea>
+                    <div class="char-counter"><span id="charCount">0</span>/500 characters</div>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i>
+                    Submit Suggestion
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <section id="recent" class="preview-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Recent Suggestions</h2>
+                <p>See what other students are suggesting to improve our university</p>
+            </div>
+            <div id="suggestionsPreview" class="suggestions-preview">
+                <div class="no-suggestions">
+                    <i class="fas fa-lightbulb"></i>
+                    <h3>No Suggestions Yet</h3>
+                    <p>Be the first to submit a suggestion and help improve our university!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="help" class="help-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Help Center</h2>
+                <p>Find answers to common questions about the suggestion system</p>
+            </div>
+            
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>What is the Student Suggestion System?</h3>
+                        <span class="faq-toggle">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>The Student Suggestion System is an official platform for Muni University students to submit ideas and feedback to help improve various aspects of university life.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>How do I submit an effective suggestion?</h3>
+                        <span class="faq-toggle">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Be specific about the issue, provide context, offer practical solutions, and maintain a constructive tone for the best results.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>What is the review process?</h3>
+                        <span class="faq-toggle">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Suggestions are reviewed by relevant departments, evaluated for feasibility, and you'll receive updates throughout the process.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Contact Us</h2>
+                <p>We're here to help! Reach out to us through any of these channels</p>
+            </div>
+            
+            <div class="contact-info">
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h3>Email Support</h3>
+                    <a href="mailto:suggestions@muni.ac.ug">suggestions@muni.ac.ug</a>
+                    <a href="mailto:studentsupport@muni.ac.ug">studentsupport@muni.ac.ug</a>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <h3>Phone Support</h3>
+                    <a href="tel:+256783669967">+256783669967</a>
+                    <a href="tel:+256784638852">+256784638852</a>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h3>Visit Us</h3>
+                    <p>Student Affairs Office</p>
+                    <p>Main Administration Building</p>
+                    <p>Muni University, Arua</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-logo">
+                <img src="logo.webp" alt="Muni University Logo" class="footer-logo-img">
+                <div class="footer-logo-text">
+                    <strong>Muni University</strong>
+                    <span>Student Suggestion System</span>
+                </div>
+            </div>
+
+            <p class="footer-description">
+                Empowering students to shape the future of our university through innovative suggestions and collaborative improvement.
+            </p>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 Muni University - Student Suggestion System. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="nav-toggle.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

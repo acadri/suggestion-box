@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Muni University</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin-dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <div class="logo-main">
+                    <img src="logo.webp" alt="Muni University Logo" class="logo-img">
+                    <div class="logo-text">
+                        <a href="index.html" class="system-name">Admin Dashboard</a>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">View Site</a>
+                <a href="#" class="nav-link admin-btn" onclick="logout()">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>Admin Panel</h3>
+                <p>Welcome, Admin</p>
+            </div>
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="#dashboard" class="nav-item">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#suggestions" class="nav-item active">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>All Suggestions</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#pending" class="nav-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Pending Review</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#responded" class="nav-item">
+                        <i class="fas fa-reply"></i>
+                        <span>Responded</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#settings" class="nav-item">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-header">
+                <h1>All Suggestions</h1>
+                <div class="header-actions">
+                    <button class="refresh-btn" onclick="loadSuggestions()">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="suggestions-grid" id="suggestionsGrid">
+                <!-- Suggestions will be loaded dynamically -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Response Modal -->
+    <div id="responseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Respond to Suggestion</h3>
+                <button class="modal-close" onclick="closeResponseModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="suggestion-preview">
+                    <strong id="previewDepartment"></strong>
+                    <p id="previewText"></p>
+                </div>
+                <div class="form-group">
+                    <label for="adminResponse">Your Response:</label>
+                    <textarea id="adminResponse" placeholder="Type your response here..." rows="6"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="responseStatus">Update Status:</label>
+                    <select id="responseStatus">
+                        <option value="Pending">Pending</option>
+                        <option value="In Review">In Review</option>
+                        <option value="Implemented">Implemented</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeResponseModal()">Cancel</button>
+                <button class="btn-primary" onclick="submitResponse()">Submit Response</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Delete Suggestion</h3>
+                <button class="modal-close" onclick="closeDeleteModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this suggestion? This action cannot be undone.</p>
+                <div class="suggestion-preview">
+                    <strong id="deletePreviewDepartment"></strong>
+                    <p id="deletePreviewText"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn-danger" onclick="confirmDelete()">Delete Suggestion</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin-dashboard.js"></script>
+</body>
+</html>

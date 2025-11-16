@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Muni University</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <div class="logo-main">
+                    <img src="logo.webp" alt="Muni University Logo" class="logo-img">
+                    <div class="logo-text">
+                        <a href="index.html" class="system-name" aria-label="Go to homepage">Student Suggestion System</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="admin-login-section">
+        <div class="container">
+            <div class="admin-form">
+                <div class="section-header">
+                    <h2>Admin Login</h2>
+                    <p>Access the admin dashboard to manage suggestions</p>
+                </div>
+                
+                <form id="adminLoginForm">
+                    <div class="form-group">
+                        <label for="adminEmail">
+                            <i class="fas fa-envelope"></i>
+                            Email
+                        </label>
+                        <input type="email" id="adminEmail" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="adminPassword">
+                            <i class="fas fa-lock"></i>
+                            Password
+                        </label>
+                        <input type="password" id="adminPassword" name="password" required>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Login
+                    </button>
+                </form>
+                
+                <div class="form-footer">
+                    <p><strong>Demo Credentials:</strong><br>Email: admin@muni.ac.ug<br>Password: admin123</p>
+                    <a href="index.html">← Back to Homepage</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            // Simple authentication (in real app, this would be server-side)
+            if (email === 'admin@muni.ac.ug' && password === 'admin123') {
+                // Store admin session
+                localStorage.setItem('adminLoggedIn', 'true');
+                localStorage.setItem('adminLoginTime', Date.now());
+                
+                // Redirect to dashboard
+                window.location.href = 'admin-dashboard.html';
+            } else {
+                alert('Invalid credentials. Use:\nEmail: admin@muni.ac.ug\nPassword: admin123');
+            }
+        });
+
+        // Check if already logged in
+        if (localStorage.getItem('adminLoggedIn') === 'true') {
+            // Check if login is still valid (24 hours)
+            const loginTime = parseInt(localStorage.getItem('adminLoginTime'));
+            const currentTime = Date.now();
+            const twentyFourHours = 24 * 60 * 60 * 1000;
+            
+            if (currentTime - loginTime < twentyFourHours) {
+                window.location.href = 'admin-dashboard.html';
+            } else {
+                // Clear expired session
+                localStorage.removeItem('adminLoggedIn');
+                localStorage.removeItem('adminLoginTime');
+            }
+        }
+    </script>
+</body>
+</html>
